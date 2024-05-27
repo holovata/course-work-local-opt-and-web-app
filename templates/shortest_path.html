@@ -31,6 +31,11 @@
         height: 590px;
         background: white;
     }
+    .word-list {
+        height: 200px;
+        overflow-y: scroll;
+        margin-top: 15px;
+    }
 </style>
 {% endblock %}
 
@@ -39,7 +44,6 @@
     <div class="row">
         <div class="col-md-9">
             <h1>Повна мережа: демонстрація алгоритму</h1>
-            <div id="pathDisplay" style="margin-top: 20px; font-size: 16px; color: darkblue;"></div>
             <div id="network" class="fixed-size"></div> <!-- Container for the graph -->
         </div>
         <div class="col-md-3 form-column">
@@ -54,9 +58,13 @@
                     <input type="text" class="form-control" id="wordInput2" name="word2">
                 </div>
                 <button type="submit" class="btn btn-primary" id="submitBtn">Підтвердити</button>
-                <button type="button" class="btn btn-secondary" onclick="loadGraph('/optimized_path_intro_data')">Очистити</button>
+                <button type="button" class="btn btn-secondary" id="clearBtn">Очистити</button>
                 <div id="messageBox"></div> <!-- Message box for notifications -->
             </form>
+            <h3>Список доступних слів</h3>
+            <div class="word-list" id="wordList">
+                <!-- Список слов будет здесь -->
+            </div>
         </div>
     </div>
 </div>
@@ -64,10 +72,11 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('checkWordsForm');
-    const pathDisplay = document.getElementById('pathDisplay');
     const messageBox = document.getElementById('messageBox');
     const submitBtn = document.getElementById('submitBtn');
+    const clearBtn = document.getElementById('clearBtn');
     const networkContainer = document.getElementById('network');
+    const wordList = document.getElementById('wordList');
 
     form.addEventListener('submit', function (event) {
         event.preventDefault();
@@ -95,7 +104,6 @@ document.addEventListener('DOMContentLoaded', function () {
             messageBox.textContent = data.message;
             messageBox.style.color = data.status === 'error' ? 'red' : 'green';
             if (data.status === 'success') {
-                pathDisplay.textContent = "Optimized Path: " + data.path;
                 loadGraph(jsonPath);
             }
             submitBtn.disabled = false;
@@ -106,6 +114,13 @@ document.addEventListener('DOMContentLoaded', function () {
             messageBox.style.color = 'red';
             submitBtn.disabled = false;
         });
+    });
+
+    clearBtn.addEventListener('click', function () {
+        document.getElementById('wordInput1').value = '';
+        document.getElementById('wordInput2').value = '';
+        loadGraph('/optimized_path_intro_data');
+        messageBox.textContent = '';
     });
 
     function determinePath(word1, word2) {
@@ -129,7 +144,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 from: edge.from,
                 to: edge.to,
                 label: edge.label,
-                title: `Weight: ${edge.weight}`
+                title: `Weight: ${edge.weight}`,
+                length: 300, // Длина ребра
+                font: { align: 'top', size: 14 }, // Настройка шрифта для ребер
+                color: { color: '#848484', highlight: '#848484', hover: '#848484' }
             }))) : new vis.DataSet();
 
             const graphData = {
@@ -142,13 +160,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     arrows: {
                         to: {
                             enabled: true,
-                            scaleFactor: 0.5
+                            scaleFactor: 0.8
                         }
-                    }
-                },
-                nodes: {
-                    shape: 'dot',
-                    size: 16
+                    },
+                    font: {
+                        align: 'top' // Ensure edge labels are placed above the edges
+                    },
+                    smooth: true
                 },
                 physics: {
                     enabled: true
@@ -163,7 +181,24 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    function loadWordList() {
+        fetch('/words_full')
+        .then(response => response.json())
+        .then(data => {
+            wordList.innerHTML = '';
+            data.forEach(word => {
+                const listItem = document.createElement('div');
+                listItem.textContent = word.Name;
+                wordList.appendChild(listItem);
+            });
+        })
+        .catch(error => {
+            console.error('Error loading word list:', error);
+        });
+    }
+
     loadGraph('/optimized_path_intro_data');  // Initial load of the introduction graph
+    loadWordList();  // Load the list of words
 });
 </script>
 

@@ -2,7 +2,6 @@ import json
 from local_optimization import local_optimize_graph, read_graph_from_csv, initialize_graph
 from create_subgraph import create_subgraph_based_on_degree
 
-
 def modify_json_data(source_file, destination_file):
     """Reads JSON, modifies data, and saves the result."""
     try:
@@ -16,7 +15,7 @@ def modify_json_data(source_file, destination_file):
         for edge in data['edges']:
             edge['attributes']['is_in_path'] = False
             weight = edge['attributes']['weight']
-            edge['attributes']['label'] += f" | вага = {weight}"
+            edge['attributes']['label'] += f" | вага = {weight:.1f}"
 
         with open(destination_file, 'w', encoding='utf-8') as file:
             json.dump(data, file, indent=4, ensure_ascii=False)
@@ -25,12 +24,10 @@ def modify_json_data(source_file, destination_file):
     except Exception as e:
         print(f"Error processing file: {e}")
 
-
 def set_initial_values(G, start_node):
     for n in G:
         G.nodes[n]['value'] = "inf"
     G.nodes[start_node]['value'] = 0
-
 
 def update_is_in_path(input_file, output_file, path):
     """Updates JSON data for the path and saves the final results."""
@@ -63,7 +60,6 @@ def update_is_in_path(input_file, output_file, path):
     except Exception as e:
         print(f"Error updating and saving JSON: {e}")
 
-
 def update_values_and_labels(input_file, output_file, graph):
     try:
         with open(input_file, 'r', encoding='utf-8') as file:
@@ -77,7 +73,7 @@ def update_values_and_labels(input_file, output_file, graph):
             if node_value is None or node_value == float('inf'):
                 node_value_str = 'inf'
             else:
-                node_value_str = str(node_value)
+                node_value_str = f"{node_value:.1f}"  # Округление до 1 знака после запятой
 
             # Установка значения 'value' и обновление 'label'
             node['attributes']['value'] = node_value_str
@@ -89,7 +85,6 @@ def update_values_and_labels(input_file, output_file, graph):
 
     except Exception as e:
         print(f"Error while updating values and labels in JSON: {e}")
-
 
 def update_json_with_path_and_save(input_file, output_file, path):
     """Updates JSON data for the path and saves the final results."""
@@ -122,24 +117,20 @@ def update_json_with_path_and_save(input_file, output_file, path):
     except Exception as e:
         print(f"Error updating and saving JSON: {e}")
 
-
-
-
-
 if __name__ == "__main__":
     source_path = 'jsons/subgraph_gephi.json'
     no_values_path = 'jsons/subgraph_no_values.json'
     with_values_path = 'jsons/subgraph_with_values.json'
     modify_json_data(source_path, no_values_path)
 
-    full_edges_path = 'csvs/cue1_response2_str_filtered_ROOT.csv'
-    df_full = read_graph_from_csv(full_edges_path)
-    full_graph = initialize_graph(df_full)
-    subgraph = create_subgraph_based_on_degree(full_graph, 25)
+    # full_edges_path = 'csvs/cue1_response2_str_filtered_ROOT.csv'
+    # df_full = read_graph_from_csv(full_edges_path)
+    # full_graph = initialize_graph(df_full)
+    # subgraph = create_subgraph_based_on_degree(full_graph, 25)
 
-    opt_graph, path = local_optimize_graph(subgraph, 406, 222)
+    # opt_graph, path = local_optimize_graph(subgraph, 406, 222)
     # path = ['406 (Value: 0)', '257 (Value: 34.0)', '832 (Value: 87.0)', '222 (Value: 129.4)']
 
-    update_values_and_labels(no_values_path, with_values_path, opt_graph)
+    # update_values_and_labels(no_values_path, with_values_path, opt_graph)
     # update_json_with_path_and_save(no_values_path, with_values_path, path)
-    update_is_in_path(no_values_path, with_values_path, path)
+    # update_is_in_path(no_values_path, with_values_path, path)

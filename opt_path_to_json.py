@@ -13,7 +13,7 @@ def update_label(label, value):
     Returns:
         str: Обновленная метка.
     """
-    return f"{label} | мітка = {value}"
+    return f"{label} | мітка = {value:.1f}"
 
 def update_edge_label(label, weight):
     """
@@ -26,7 +26,7 @@ def update_edge_label(label, weight):
     Returns:
         str: Обновленная метка ребра.
     """
-    return f"{label} | вага = {weight}"
+    return f"{label} | вага = {weight:.1f}"
 
 def get_edge_properties(file_path, source_id, target_id):
     """

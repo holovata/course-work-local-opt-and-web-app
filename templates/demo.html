@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', function() {
     loadGraphData('/graph_data'); // Initial load
 
     // Populate dropdowns with words
-    fetch('/words')
+    fetch('/words_sub')
     .then(response => response.json())
     .then(data => {
         const word1Select = document.getElementById('word1Select');

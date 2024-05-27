@@ -9,7 +9,6 @@ from opt_path_to_json import opt_path_to_json
 
 app = Flask(__name__)
 
-
 # Load the JSON file safely and initialize graphs on startup
 try:
     with open('jsons/subgraph_no_values.json', 'r', encoding='utf-8') as file:
@@ -33,24 +32,30 @@ except Exception as e:
     app.logger.error(f"Failed to initialize graph or load graph data: {e}")
     graph_data = {}  # Default to an empty graph if loading fails
 
-
 @app.route('/')
 def home():
     return render_template('index.html', active_page='home')
-
 
 @app.route('/graph_data')
 def graph_data_route():
     return jsonify(graph_data)
 
-
 @app.route('/demo')
 def demo():
     return render_template('demo.html', active_page='demo')
 
+@app.route('/words_full')
+def get_words_full():
+    try:
+        df = pd.read_csv(full_nodes_path)
+        words = df[['Name', 'Label']].to_dict(orient='records')
+        return jsonify(words)
+    except Exception as e:
+        app.logger.error(f"Failed to read words from CSV: {e}")
+        return jsonify({"error": "Failed to load words"}), 500
 
-@app.route('/words')
-def get_words():
+@app.route('/words_sub')
+def get_words_sub():
     try:
         df = pd.read_csv(subgraph_nodes_path)
         words = df[['Name', 'Label']].to_dict(orient='records')
@@ -58,7 +63,6 @@ def get_words():
     except Exception as e:
         app.logger.error(f"Failed to read words from CSV: {e}")
         return jsonify({"error": "Failed to load words"}), 500
-
 
 @app.route('/optimize_subgraph', methods=['POST'])
 def optimize_subgraph():
@@ -83,7 +87,6 @@ def optimize_subgraph():
         app.logger.error("Помилка при оптимізації підграфу: " + error_message)
         return jsonify({"status": "error", "message": "Помилка при оптимізації підграфу: " + error_message})
 
-
 @app.route('/graph_data_with_path')
 def graph_data_with_path():
     try:
@@ -94,14 +97,13 @@ def graph_data_with_path():
         app.logger.error(f"Failed to load or parse 'subgraph_with_values.json': {e}")
         return jsonify({"error": "Failed to load resource"}), 500
 
-
 @app.route('/optimize_graph', methods=['POST'])
 def optimize_graph():
     word1 = request.form['word1']
     word2 = request.form['word2']
 
     # Check if the two words are the same
-    if word1 == word2:
+    if (word1 == word2):
         return jsonify({"status": "error", "message": "Введені слова ідентичні."})
 
     try:
@@ -124,7 +126,6 @@ def optimize_graph():
         app.logger.error("Помилка при оптимізації графу: " + error_message)
         return jsonify({"status": "error", "message": "Помилка при оптимізації графу: " + error_message})
 
-
 @app.route('/optimized_path_intro_data')
 def optimized_path_intro_data():
     try:
@@ -136,7 +137,6 @@ def optimized_path_intro_data():
         return jsonify({"error": "Failed to load optimized path introduction data"}), 500
 
 # Assuming you already have optimized_path_data route for optimized_path.json
-
 
 @app.route('/optimized_path_data')
 def optimized_path_data():
@@ -154,17 +154,13 @@ def optimized_path_data():
         app.logger.error(f"Failed to load 'optimized_path.json': {e}")
         return jsonify({"error": "Failed to load optimized path data"}), 500
 
-
 @app.route('/shortest_path')
 def shortest_path():
     return render_template('shortest_path.html', active_page='shortest_path')
 
-
 @app.route('/visualization')
 def visualization():
     return render_template('visualization.html', active_page='visualization', svg_content=svg_content)
-
-
 
 if __name__ == "__main__":
     app.run(debug=True, use_reloader=False)
