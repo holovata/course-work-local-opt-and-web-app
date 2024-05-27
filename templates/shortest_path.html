@@ -58,7 +58,7 @@
                     <input type="text" class="form-control" id="wordInput2" name="word2">
                 </div>
                 <button type="submit" class="btn btn-primary" id="submitBtn">Підтвердити</button>
-                <button type="button" class="btn btn-secondary" id="clearBtn">Очистити</button>
+                <button type="button" class="btn btn-danger" id="clearBtn">Очистити</button>
                 <div id="messageBox"></div> <!-- Message box for notifications -->
             </form>
             <h3>Список доступних слів</h3>
@@ -83,6 +83,12 @@ document.addEventListener('DOMContentLoaded', function () {
         const word1 = document.getElementById('wordInput1').value.trim();
         const word2 = document.getElementById('wordInput2').value.trim();
 
+        if (word1 === "" || word2 === "") {
+            messageBox.textContent = "Будь ласка, введіть два різних слова.";
+            messageBox.style.color = 'red';
+            return;
+        }
+
         if (word1 === word2) {
             messageBox.textContent = "Введені слова є однаковими.";
             messageBox.style.color = 'red';
@@ -90,6 +96,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         submitBtn.disabled = true;
+        clearBtn.disabled = true;
+        messageBox.textContent = "Проводиться оптимізація графа, зачекайте...";
+        messageBox.style.color = 'blue';
+
         const jsonPath = determinePath(word1, word2);
 
         fetch('/optimize_graph', {
@@ -107,12 +117,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 loadGraph(jsonPath);
             }
             submitBtn.disabled = false;
+            clearBtn.disabled = false;
         })
         .catch(error => {
             console.error('Fetch error:', error);
             messageBox.textContent = "Network error: Could not retrieve data.";
             messageBox.style.color = 'red';
             submitBtn.disabled = false;
+            clearBtn.disabled = false;
         });
     });
 
@@ -137,7 +149,8 @@ document.addEventListener('DOMContentLoaded', function () {
             const nodes = data.nodes ? new vis.DataSet(data.nodes.map(node => ({
                 id: node.key,
                 label: node.label,
-                title: `Value: ${node.value}`
+                title: `Value: ${node.value}`,
+                color: node.is_corner ? '#D0D7FE' : '#BFD8ED'
             }))) : new vis.DataSet();
 
             const edges = data.edges ? new vis.DataSet(data.edges.map(edge => ({

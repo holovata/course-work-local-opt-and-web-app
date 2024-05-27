@@ -71,13 +71,14 @@ def opt_path_to_json(path, csv_file_path='csvs/nodes12_list.csv', edge_file_path
     edges = []
 
     # Извлекаем узлы и их значения, и получаем метки из CSV
-    for node in path:
+    for i, node in enumerate(path):
         node_id, value = node.split(" (Value: ")
         value = value[:-1]  # Убираем закрывающую скобку
         value_float = float(value)
         label = get_label_by_id(csv_file_path, node_id)
         updated_label = update_label(label, value_float)
-        nodes.append({"key": node_id, "value": value_float, "label": updated_label})
+        is_corner = i == 0 or i == len(path) - 1  # Первой и последней вершинам устанавливаем is_corner=True
+        nodes.append({"key": node_id, "value": value_float, "label": updated_label, "is_corner": is_corner})
 
     # Извлекаем ребра на основе последовательных узлов и получаем их свойства из CSV
     for i in range(len(path) - 1):
@@ -99,7 +100,6 @@ def opt_path_to_json(path, csv_file_path='csvs/nodes12_list.csv', edge_file_path
         print("Путь успешно сохранен в", json_file_path)
     except IOError as e:
         print("Ошибка при записи в файл:", e)
-
 
 # Пример использования
 '''path_example = ['406 (Value: 0)', '760 (Value: 18.545454545454547)', '697 (Value: 29.177033492822964)', '233 (Value: 36.177033492822964)', '124 (Value: 58.51036682615629)', '405 (Value: 76.09370015948963)']
