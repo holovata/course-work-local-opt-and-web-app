@@ -32,7 +32,7 @@
         background: white;
     }
     .word-list {
-        height: 200px;
+        height: 100px;
         overflow-y: scroll;
         margin-top: 15px;
     }
@@ -61,10 +61,19 @@
                 <button type="button" class="btn btn-danger" id="clearBtn">Очистити</button>
                 <div id="messageBox"></div> <!-- Message box for notifications -->
             </form>
-            <h3>Список доступних слів</h3>
+            <h3>Доступні слова</h3>
             <div class="word-list" id="wordList">
                 <!-- Список слов будет здесь -->
             </div>
+            <h2>Нове друге слово</h2>
+            <form id="newSecondWordForm">
+                <div class="mb-3">
+                    <label for="newSecondWord">Нове друге слово</label>
+                    <input type="text" class="form-control" id="newSecondWord" name="newSecondWord" disabled>
+                </div>
+                <button type="submit" class="btn btn-primary" id="submitNewWordBtn" disabled>Підтвердити</button>
+                <div id="newWordMessageBox"></div> <!-- Message box for notifications -->
+            </form>
         </div>
     </div>
 </div>
@@ -78,13 +87,18 @@ document.addEventListener('DOMContentLoaded', function () {
     const networkContainer = document.getElementById('network');
     const wordList = document.getElementById('wordList');
 
+    const newSecondWordForm = document.getElementById('newSecondWordForm');
+    const newSecondWordInput = document.getElementById('newSecondWord');
+    const newWordMessageBox = document.getElementById('newWordMessageBox');
+    const submitNewWordBtn = document.getElementById('submitNewWordBtn');
+
     form.addEventListener('submit', function (event) {
         event.preventDefault();
         const word1 = document.getElementById('wordInput1').value.trim();
         const word2 = document.getElementById('wordInput2').value.trim();
 
         if (word1 === "" || word2 === "") {
-            messageBox.textContent = "Будь ласка, введіть два різних слова.";
+            messageBox.textContent = "Будь ласка, введіть обидва слова.";
             messageBox.style.color = 'red';
             return;
         }
@@ -115,6 +129,8 @@ document.addEventListener('DOMContentLoaded', function () {
             messageBox.style.color = data.status === 'error' ? 'red' : 'green';
             if (data.status === 'success') {
                 loadGraph(jsonPath);
+                newSecondWordInput.disabled = false;
+                submitNewWordBtn.disabled = false;
             }
             submitBtn.disabled = false;
             clearBtn.disabled = false;
@@ -128,11 +144,54 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    newSecondWordForm.addEventListener('submit', function (event) {
+        event.preventDefault();
+        const word1 = document.getElementById('wordInput1').value.trim();
+        const newSecondWord = newSecondWordInput.value.trim();
+
+        if (newSecondWord === "") {
+            newWordMessageBox.textContent = "Будь ласка, введіть нове друге слово.";
+            newWordMessageBox.style.color = 'red';
+            return;
+        }
+
+        submitNewWordBtn.disabled = true;
+        newWordMessageBox.textContent = "Проводиться реконструкція шляху, зачекайте...";
+        newWordMessageBox.style.color = 'blue';
+
+        fetch('/optimize_new_second_word', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `startNode=${encodeURIComponent(word1)}&newSecondWord=${encodeURIComponent(newSecondWord)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            newWordMessageBox.textContent = data.message;
+            newWordMessageBox.style.color = data.status === 'error' ? 'red' : 'green';
+            if (data.status === 'success') {
+                loadGraph('/optimized_path_data');
+            }
+            submitNewWordBtn.disabled = false;
+        })
+        .catch(error => {
+            console.error('Fetch error:', error);
+            newWordMessageBox.textContent = "Network error: Could not retrieve data.";
+            newWordMessageBox.style.color = 'red';
+            submitNewWordBtn.disabled = false;
+        });
+    });
+
     clearBtn.addEventListener('click', function () {
         document.getElementById('wordInput1').value = '';
         document.getElementById('wordInput2').value = '';
+        newSecondWordInput.value = '';
+        newSecondWordInput.disabled = true;
+        submitNewWordBtn.disabled = true;
         loadGraph('/optimized_path_intro_data');
         messageBox.textContent = '';
+        newWordMessageBox.textContent = '';
     });
 
     function determinePath(word1, word2) {
@@ -150,7 +209,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 id: node.key,
                 label: node.label,
                 title: `Value: ${node.value}`,
-                color: node.is_corner ? '#D0D7FE' : '#BFD8ED'
+                color: node.is_corner ? '#FDCFD6' : '#BFD8ED' // Желтый для is_corner
             }))) : new vis.DataSet();
 
             const edges = data.edges ? new vis.DataSet(data.edges.map(edge => ({

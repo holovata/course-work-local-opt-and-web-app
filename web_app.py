@@ -1,13 +1,16 @@
 import json
 from flask import Flask, render_template, jsonify, request
 from word_checker import get_id_by_name
-from local_optimization import local_optimize_graph, read_graph_from_csv, initialize_graph, extract_edges_for_path
+from local_optimization import local_optimize_graph, read_graph_from_csv, initialize_graph, reconstruct_path
 from json_subgraph_add_values import update_values_and_labels, update_is_in_path
 from create_subgraph import create_subgraph_based_on_degree
 import pandas as pd
 from opt_path_to_json import opt_path_to_json
 
 app = Flask(__name__)
+
+# Глобальные переменные для хранения оптимизированного графа, всех путей и первого слова
+global optimized_graph, all_paths, first_word_id
 
 # Load the JSON file safely and initialize graphs on startup
 try:
@@ -32,17 +35,21 @@ except Exception as e:
     app.logger.error(f"Failed to initialize graph or load graph data: {e}")
     graph_data = {}  # Default to an empty graph if loading fails
 
+
 @app.route('/')
 def home():
     return render_template('index.html', active_page='home')
+
 
 @app.route('/graph_data')
 def graph_data_route():
     return jsonify(graph_data)
 
+
 @app.route('/demo')
 def demo():
     return render_template('demo.html', active_page='demo')
+
 
 @app.route('/words_full')
 def get_words_full():
@@ -54,6 +61,7 @@ def get_words_full():
         app.logger.error(f"Failed to read words from CSV: {e}")
         return jsonify({"error": "Failed to load words"}), 500
 
+
 @app.route('/words_sub')
 def get_words_sub():
     try:
@@ -64,6 +72,7 @@ def get_words_sub():
         app.logger.error(f"Failed to read words from CSV: {e}")
         return jsonify({"error": "Failed to load words"}), 500
 
+
 @app.route('/optimize_subgraph', methods=['POST'])
 def optimize_subgraph():
     word1 = request.form.get('word1', '')
@@ -72,7 +81,8 @@ def optimize_subgraph():
         word1_id = get_id_by_name(subgraph_nodes_path, word1)
         word2_id = get_id_by_name(subgraph_nodes_path, word2)
 
-        optimized_subgraph, sub_path = local_optimize_graph(subgraph, word1_id, word2_id)
+        optimized_subgraph, all_paths = local_optimize_graph(subgraph, word1_id)
+        sub_path = reconstruct_path(subgraph, all_paths, word1_id, word2_id)
 
         update_values_and_labels(subgraph_no_path, subgraph_with_path, optimized_subgraph)  # Обновляем значения для всех узлов
         update_is_in_path(subgraph_with_path, subgraph_with_path, sub_path)  # Обновляем is_in_path только для узлов в пути
@@ -87,6 +97,7 @@ def optimize_subgraph():
         app.logger.error("Помилка при оптимізації підграфу: " + error_message)
         return jsonify({"status": "error", "message": "Помилка при оптимізації підграфу: " + error_message})
 
+
 @app.route('/graph_data_with_path')
 def graph_data_with_path():
     try:
@@ -97,8 +108,11 @@ def graph_data_with_path():
         app.logger.error(f"Failed to load or parse 'subgraph_with_values.json': {e}")
         return jsonify({"error": "Failed to load resource"}), 500
 
+
 @app.route('/optimize_graph', methods=['POST'])
 def optimize_graph():
+    global optimized_graph, all_paths, first_word_id
+
     word1 = request.form['word1']
     word2 = request.form['word2']
 
@@ -110,10 +124,12 @@ def optimize_graph():
         word1_id = get_id_by_name(full_nodes_path, word1)
         word2_id = get_id_by_name(full_nodes_path, word2)
 
-        if not word1_id or not word2_id:
+        if word1_id is None or word2_id is None:
             return jsonify({"status": "error", "message": "Одне чи обидва слова не наявні в мережі."})
 
-        optimized_graph, path = local_optimize_graph(full_graph, word1_id, word2_id)
+        optimized_graph, all_paths = local_optimize_graph(full_graph, word1_id)
+        path = reconstruct_path(full_graph, all_paths, word1_id, word2_id)
+        first_word_id = word1_id
 
         if path is None or not path:
             return jsonify({"status": "warning", "message": "Немає шляху між введеними словами."})
@@ -126,6 +142,33 @@ def optimize_graph():
         app.logger.error("Помилка при оптимізації графу: " + error_message)
         return jsonify({"status": "error", "message": "Помилка при оптимізації графу: " + error_message})
 
+
+@app.route('/optimize_new_second_word', methods=['POST'])
+def optimize_new_second_word():
+    global optimized_graph, all_paths, first_word_id
+
+    new_second_word = request.form['newSecondWord']
+
+    try:
+        new_second_word_id = get_id_by_name(full_nodes_path, new_second_word)
+
+        if new_second_word_id is None:
+            return jsonify({"status": "error", "message": "Слово не наявне в мережі."})
+
+        path = reconstruct_path(optimized_graph, all_paths, first_word_id, new_second_word_id)
+
+        if path is None or not path:
+            return jsonify({"status": "warning", "message": "Немає шляху між введеними словами."})
+
+        path_display = " -> ".join(str(node) for node in path)
+        opt_path_to_json(path)
+        return jsonify({"status": "success", "message": "Шлях реконструйовано.", "path": path_display})
+    except Exception as e:
+        error_message = str(e)
+        app.logger.error("Помилка при реконструкції шляху: " + error_message)
+        return jsonify({"status": "error", "message": "Помилка при реконструкції шляху: " + error_message})
+
+
 @app.route('/optimized_path_intro_data')
 def optimized_path_intro_data():
     try:
@@ -136,7 +179,6 @@ def optimized_path_intro_data():
         app.logger.error(f"Failed to load 'optimized_path_intro.json': {e}")
         return jsonify({"error": "Failed to load optimized path introduction data"}), 500
 
-# Assuming you already have optimized_path_data route for optimized_path.json
 
 @app.route('/optimized_path_data')
 def optimized_path_data():
@@ -154,13 +196,16 @@ def optimized_path_data():
         app.logger.error(f"Failed to load 'optimized_path.json': {e}")
         return jsonify({"error": "Failed to load optimized path data"}), 500
 
+
 @app.route('/shortest_path')
 def shortest_path():
     return render_template('shortest_path.html', active_page='shortest_path')
 
+
 @app.route('/visualization')
 def visualization():
     return render_template('visualization.html', active_page='visualization', svg_content=svg_content)
+
 
 if __name__ == "__main__":
     app.run(debug=True, use_reloader=False)

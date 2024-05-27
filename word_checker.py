@@ -1,6 +1,5 @@
 import pandas as pd
 
-
 def get_id_by_name(file_path, target_word):
     # Зчитування CSV-файлу у DataFrame
     try:
@@ -14,11 +13,11 @@ def get_id_by_name(file_path, target_word):
         print("Помилка: DataFrame не містить необхідних колонок 'Name' або 'Id'")
         return None
 
-    # Створення маски, де target_word збігається з елементами в колонці 'Name'
-    mask = df['Name'].str.contains(f"\\b{target_word}\\b", na=False, regex=True)
-    if mask.any():
-        # Повернення першого ID, де маска є True
-        return df.loc[mask, 'Id'].values[0]
+    # Пошук точного збігу слова у колонці 'Name'
+    exact_match = df[df['Name'].str.strip() == target_word.strip()]
+    if not exact_match.empty:
+        # Повернення першого ID, де знайдений точний збіг
+        return exact_match.iloc[0]['Id']
     return None
 
 def get_name_by_id(file_path, target_id):
@@ -75,19 +74,3 @@ def get_label_by_id(file_path, node_id):
     else:
         print(f"No label found for ID: {node_id}")
         return None
-
-
-
-# Приклад використання функції
-'''file_path = 'csvs/nodes12_list.csv'
-target_word = 'думати'
-result = get_id_by_name(file_path, target_word)
-print(f"ID для слова '{target_word}': {result}")
-
-target_id = 255
-result2 = get_name_by_id(file_path, target_id)
-print(f"Назва для ID {target_id}: {result2}")
-
-node_id = 30
-label = get_label_by_id(file_path, node_id)
-print("Label for node", node_id, "is:", label)'''
