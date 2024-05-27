@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+
+{% block title %}Повна мережа{% endblock %}
+
+{% block additional_scripts %}
+<link href="https://unpkg.com/vis-network@9.1.0/dist/vis-network.min.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="https://unpkg.com/vis-network@8.3.0/dist/vis-network.min.js"></script>
+
+<style>
+    .form-column {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        background-color: white;
+        padding: 15px;
+        border-radius: 10px;
+    }
+    #messageBox {
+        margin-top: 10px;
+        color: #333;
+        max-width: 100%;
+        word-wrap: break-word;
+    }
+    #network {
+        width: 834px;
+        height: 590px;
+        background: white;
+        overflow: hidden; /* Prevents content from spilling out */
+        resize: none; /* Prevents resizing */
+    }
+    .fixed-size {
+        width: 100%;
+        height: 590px;
+        background: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-9">
+            <h1>Повна мережа: демонстрація алгоритму</h1>
+            <div id="pathDisplay" style="margin-top: 20px; font-size: 16px; color: darkblue;"></div>
+            <div id="network" class="fixed-size"></div> <!-- Container for the graph -->
+        </div>
+        <div class="col-md-3 form-column">
+            <h2>Введіть слова</h2>
+            <form id="checkWordsForm">
+                <div class="mb-3">
+                    <label for="wordInput1">Слово 1</label>
+                    <input type="text" class="form-control" id="wordInput1" name="word1">
+                </div>
+                <div class="mb-3">
+                    <label for="wordInput2">Слово 2</label>
+                    <input type="text" class="form-control" id="wordInput2" name="word2">
+                </div>
+                <button type="submit" class="btn btn-primary" id="submitBtn">Підтвердити</button>
+                <button type="button" class="btn btn-secondary" onclick="loadGraph('/optimized_path_intro_data')">Очистити</button>
+                <div id="messageBox"></div> <!-- Message box for notifications -->
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('checkWordsForm');
+    const pathDisplay = document.getElementById('pathDisplay');
+    const messageBox = document.getElementById('messageBox');
+    const submitBtn = document.getElementById('submitBtn');
+    const networkContainer = document.getElementById('network');
+
+    form.addEventListener('submit', function (event) {
+        event.preventDefault();
+        const word1 = document.getElementById('wordInput1').value.trim();
+        const word2 = document.getElementById('wordInput2').value.trim();
+
+        if (word1 === word2) {
+            messageBox.textContent = "Введені слова є однаковими.";
+            messageBox.style.color = 'red';
+            return;
+        }
+
+        submitBtn.disabled = true;
+        const jsonPath = determinePath(word1, word2);
+
+        fetch('/optimize_graph', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `word1=${encodeURIComponent(word1)}&word2=${encodeURIComponent(word2)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            messageBox.textContent = data.message;
+            messageBox.style.color = data.status === 'error' ? 'red' : 'green';
+            if (data.status === 'success') {
+                pathDisplay.textContent = "Optimized Path: " + data.path;
+                loadGraph(jsonPath);
+            }
+            submitBtn.disabled = false;
+        })
+        .catch(error => {
+            console.error('Fetch error:', error);
+            messageBox.textContent = "Network error: Could not retrieve data.";
+            messageBox.style.color = 'red';
+            submitBtn.disabled = false;
+        });
+    });
+
+    function determinePath(word1, word2) {
+        if (word1 === "" && word2 === "") {
+            return '/optimized_path_intro_data';
+        }
+        return '/optimized_path_data';
+    }
+
+    function loadGraph(jsonPath) {
+        fetch(jsonPath)
+        .then(response => response.json())
+        .then(data => {
+            const nodes = data.nodes ? new vis.DataSet(data.nodes.map(node => ({
+                id: node.key,
+                label: node.label,
+                title: `Value: ${node.value}`
+            }))) : new vis.DataSet();
+
+            const edges = data.edges ? new vis.DataSet(data.edges.map(edge => ({
+                from: edge.from,
+                to: edge.to,
+                label: edge.label,
+                title: `Weight: ${edge.weight}`
+            }))) : new vis.DataSet();
+
+            const graphData = {
+                nodes: nodes,
+                edges: edges
+            };
+
+            const options = {
+                edges: {
+                    arrows: {
+                        to: {
+                            enabled: true,
+                            scaleFactor: 0.5
+                        }
+                    }
+                },
+                nodes: {
+                    shape: 'dot',
+                    size: 16
+                },
+                physics: {
+                    enabled: true
+                }
+            };
+
+            const network = new vis.Network(networkContainer, graphData, options);
+            network.fit();
+        })
+        .catch(error => {
+            console.error('Error loading optimized path data:', error);
+        });
+    }
+
+    loadGraph('/optimized_path_intro_data');  // Initial load of the introduction graph
+});
+</script>
+
+{% endblock %}

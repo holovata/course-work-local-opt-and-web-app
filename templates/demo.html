@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+
+{% block title %}Підграф мережі{% endblock %}
+
+{% block additional_scripts %}
+<link href="https://unpkg.com/vis-network@9.1.0/dist/vis-network.min.css" rel="stylesheet" type="text/css" />
+<script src="https://unpkg.com/vis-network@9.1.0/dist/vis-network.min.js"></script>
+<style>
+    .form-column {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        background-color: white;
+        padding: 15px;
+        border-radius: 10px;
+    }
+    #messageBox {
+        margin-top: 10px;
+        color: #333;
+        max-width: 100%;
+        word-wrap: break-word;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-9">
+            <h1>Підграф мережі: демонстрація алгоритму</h1>
+            <div id="network" style="width: 100%; height: 590px; background: white;"></div>
+        </div>
+        <div class="col-md-3 form-column">
+            <h1>Оберіть слова</h1>
+            <form id="wordForm">
+                <div class="mb-3">
+                    <label for="word1Select" class="form-label">Слово 1</label>
+                    <select id="word1Select" class="form-control" name="word1"></select>
+                </div>
+                <div class="mb-3">
+                    <label for="word2Select" class="form-label">Слово 2</label>
+                    <select id="word2Select" class="form-control" name="word2"></select>
+                </div>
+                <button type="submit" class="btn btn-primary">Підтвердити</button>
+                <button type="button" class="btn btn-danger" id="clearGraph">Очистити</button>
+            </form>
+            <div id="messageBox"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const networkContainer = document.getElementById('network');
+    let network;
+
+    function loadGraphData(path) {
+        fetch(path)
+        .then(response => response.json())
+        .then(data => {
+            const nodes = new vis.DataSet(data.nodes.map(node => ({
+                id: node.key,
+                label: node.attributes.label,
+                x: node.attributes.x,
+                y: node.attributes.y,
+                size: node.attributes.size,
+                color: node.attributes.is_in_path ? '#660218' : '#95bfdb',
+                font: { size: 40, color: node.attributes.is_in_path ? '#ffffff' : '#333333' }
+            })));
+
+            const edges = new vis.DataSet(data.edges.map(edge => ({
+                from: edge.source,
+                to: edge.target,
+                label: edge.attributes.label,
+                color: edge.attributes.is_in_path ? '#660218' : '#1f78b4',
+                width: 5,
+                font: { size: 26, align: 'top' }, // Увеличение шрифта меток на рёбрах
+                smooth: { type: 'curvedCW', roundness: 0.2 }
+            })));
+
+            const options = {
+                edges: { arrows: { to: { enabled: true, scaleFactor: 0.8 } }, smooth: true },
+                interaction: { hover: true },
+                physics: { enabled: false }
+            };
+            network = new vis.Network(networkContainer, { nodes: nodes, edges: edges }, options);
+        })
+        .catch(error => console.error('Error loading graph data:', error));
+    }
+
+    loadGraphData('/graph_data'); // Initial load
+
+    // Populate dropdowns with words
+    fetch('/words')
+    .then(response => response.json())
+    .then(data => {
+        const word1Select = document.getElementById('word1Select');
+        const word2Select = document.getElementById('word2Select');
+        data.forEach(word => {
+            let option1 = new Option(word.Label, word.Name);
+            let option2 = new Option(word.Label, word.Name);
+            word1Select.appendChild(option1);
+            word2Select.appendChild(option2);
+        });
+    });
+
+    const form = document.getElementById('wordForm');
+    const messageBox = document.getElementById('messageBox');
+    form.addEventListener('submit', function(event) {
+    event.preventDefault();
+    const formData = new FormData(form);
+    fetch('/optimize_subgraph', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        messageBox.innerText = data.message;
+        messageBox.style.color = data.status === 'error' ? 'red' : 'green';
+        // Загрузить данные графа независимо от статуса сообщения
+        loadGraphData('/graph_data_with_path');
+        if (data.status === 'warning') {
+            messageBox.innerText = "Шляху не існує, або введені слова є однаковими";
+            messageBox.style.color = 'orange';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        messageBox.innerText = 'There was an error processing your request.';
+        messageBox.style.color = 'red';
+    });
+});
+
+    document.getElementById('clearGraph').addEventListener('click', function () {
+        loadGraphData('/graph_data');
+    });
+});
+</script>
+
+
+{% endblock %}

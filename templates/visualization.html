@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% block title %}Візуалізація{% endblock %}
+{% block content %}
+    <h1>Візуалізація повної мережі</h1>
+    <div id="svg-container" style="width: 1150px; height: 600px; border: 1px solid #ddd; overflow: auto;">
+        {{ svg_content | safe }}
+    </div>
+{% endblock %}
