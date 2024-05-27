@@ -63,7 +63,6 @@
             </form>
             <h3>Доступні слова</h3>
             <div class="word-list" id="wordList">
-                <!-- Список слов будет здесь -->
             </div>
             <h2>Нове друге слово</h2>
             <form id="newSecondWordForm">
@@ -209,7 +208,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 id: node.key,
                 label: node.label,
                 title: `Value: ${node.value}`,
-                color: node.is_corner ? '#FDCFD6' : '#BFD8ED' // Желтый для is_corner
+                color: node.is_corner ? '#FDCFD6' : '#BFD8ED'
             }))) : new vis.DataSet();
 
             const edges = data.edges ? new vis.DataSet(data.edges.map(edge => ({
@@ -217,8 +216,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 to: edge.to,
                 label: edge.label,
                 title: `Weight: ${edge.weight}`,
-                length: 300, // Длина ребра
-                font: { align: 'top', size: 14 }, // Настройка шрифта для ребер
+                length: 300,
+                font: { align: 'top', size: 14 },
                 color: { color: '#848484', highlight: '#848484', hover: '#848484' }
             }))) : new vis.DataSet();
 
@@ -273,5 +272,4 @@ document.addEventListener('DOMContentLoaded', function () {
     loadWordList();  // Load the list of words
 });
 </script>
-
 {% endblock %}

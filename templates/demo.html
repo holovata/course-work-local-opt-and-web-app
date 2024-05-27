@@ -115,7 +115,6 @@ document.addEventListener('DOMContentLoaded', function() {
     .then(data => {
         messageBox.innerText = data.message;
         messageBox.style.color = data.status === 'error' ? 'red' : 'green';
-        // Загрузить данные графа независимо от статуса сообщения
         loadGraphData('/graph_data_with_path');
         if (data.status === 'warning') {
             messageBox.innerText = "Шляху не існує, або введені слова є однаковими";
@@ -134,6 +133,4 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-
-
 {% endblock %}
