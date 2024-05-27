@@ -2,6 +2,7 @@ import json
 from local_optimization import local_optimize_graph, read_graph_from_csv, initialize_graph
 from create_subgraph import create_subgraph_based_on_degree
 
+
 def modify_json_data(source_file, destination_file):
     """Reads JSON, modifies data, and saves the result."""
     try:
@@ -24,10 +25,12 @@ def modify_json_data(source_file, destination_file):
     except Exception as e:
         print(f"Error processing file: {e}")
 
+
 def set_initial_values(G, start_node):
     for n in G:
         G.nodes[n]['value'] = "inf"
     G.nodes[start_node]['value'] = 0
+
 
 def update_is_in_path(input_file, output_file, path):
     """Updates JSON data for the path and saves the final results."""
@@ -60,6 +63,7 @@ def update_is_in_path(input_file, output_file, path):
     except Exception as e:
         print(f"Error updating and saving JSON: {e}")
 
+
 def update_values_and_labels(input_file, output_file, graph):
     try:
         with open(input_file, 'r', encoding='utf-8') as file:
@@ -85,6 +89,7 @@ def update_values_and_labels(input_file, output_file, graph):
 
     except Exception as e:
         print(f"Error while updating values and labels in JSON: {e}")
+
 
 def update_json_with_path_and_save(input_file, output_file, path):
     """Updates JSON data for the path and saves the final results."""
@@ -116,6 +121,7 @@ def update_json_with_path_and_save(input_file, output_file, path):
 
     except Exception as e:
         print(f"Error updating and saving JSON: {e}")
+
 
 if __name__ == "__main__":
     source_path = 'jsons/subgraph_gephi.json'

@@ -1,6 +1,7 @@
 import pandas as pd
 from local_optimization import read_graph_from_csv, initialize_graph, local_optimize_graph
 
+
 # Збереження інформації про ребра підграфа у CSV файл
 def save_subgraph_edges_to_csv(G, subgraph, output_file_path):
     # Створення списку словників для кожного ребра з усіма необхідними атрибутами
@@ -22,6 +23,7 @@ def save_subgraph_edges_to_csv(G, subgraph, output_file_path):
     df_edges.to_csv(output_file_path, index=False)
     print(f"Інформація про ребра підграфа збережена до {output_file_path}")
 
+
 # Збереження інформації про вузли підграфа у CSV файл
 def save_subgraph_nodes_to_csv(graph_nodes, subgraph_nodes, output_csv_file):
     # Гарантування, що ID вузлів підграфа правильно сформатовані у список
@@ -37,6 +39,7 @@ def save_subgraph_nodes_to_csv(graph_nodes, subgraph_nodes, output_csv_file):
     # Збереження відфільтрованого DataFrame до нового CSV файлу
     subgraph_df.to_csv(output_csv_file, index=False)
     print(f"Вузли підграфа збережено до {output_csv_file}")
+
 
 # Створення підграфа на основі ступеня вузлів
 def create_subgraph_based_on_degree(G, num_nodes):

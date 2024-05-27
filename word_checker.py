@@ -1,5 +1,6 @@
 import pandas as pd
 
+
 def get_id_by_name(file_path, target_word):
     # Зчитування CSV-файлу у DataFrame
     try:

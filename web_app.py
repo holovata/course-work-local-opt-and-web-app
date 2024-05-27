@@ -84,10 +84,10 @@ def optimize_subgraph():
         optimized_subgraph, all_paths = local_optimize_graph(subgraph, word1_id)
         sub_path = reconstruct_path(subgraph, all_paths, word1_id, word2_id)
 
-        update_values_and_labels(subgraph_no_path, subgraph_with_path, optimized_subgraph)  # Обновляем значения для всех узлов
-        update_is_in_path(subgraph_with_path, subgraph_with_path, sub_path)  # Обновляем is_in_path только для узлов в пути
+        update_values_and_labels(subgraph_no_path, subgraph_with_path, optimized_subgraph)
+        update_is_in_path(subgraph_with_path, subgraph_with_path, sub_path)
 
-        if sub_path is None or len(sub_path) == 1:  # Проверяем, есть ли путь или он очень короткий
+        if sub_path is None or len(sub_path) == 1:
             message = f"Не існує шляху між {word1} та {word2}, або введені слова є однаковими."
             return jsonify({"status": "warning", "message": message})
 
