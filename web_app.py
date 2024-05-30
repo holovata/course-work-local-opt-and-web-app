@@ -1,5 +1,6 @@
 import json
-from flask import Flask, render_template, jsonify, request
+import os
+from flask import Flask, render_template, jsonify, request, send_from_directory
 from word_checker import get_id_by_name
 from local_optimization import local_optimize_graph, read_graph_from_csv, initialize_graph, reconstruct_path
 from json_subgraph_add_values import update_values_and_labels, update_is_in_path
@@ -9,7 +10,6 @@ from opt_path_to_json import opt_path_to_json
 
 app = Flask(__name__)
 
-# Глобальные переменные для хранения оптимизированного графа, всех путей и первого слова
 global optimized_graph, all_paths, first_word_id
 
 # Load the JSON file safely and initialize graphs on startup
@@ -205,6 +205,16 @@ def shortest_path():
 @app.route('/visualization')
 def visualization():
     return render_template('visualization.html', active_page='visualization', svg_content=svg_content)
+
+
+@app.route('/download_assoc_data')
+def download_assoc_data():
+    zip_path = 'csvs_for_site/ukrainian_assoc_data.zip'
+    try:
+        return send_from_directory(directory='csvs_for_site', path=os.path.basename(zip_path), as_attachment=True)
+    except Exception as e:
+        app.logger.error(f"Failed to send file: {e}")
+        return jsonify({"error": "Failed to send file"}), 500
 
 
 if __name__ == "__main__":
