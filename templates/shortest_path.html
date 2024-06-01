@@ -211,10 +211,24 @@ document.addEventListener('DOMContentLoaded', function () {
         fetch('/download_all_paths', {
             method: 'POST'
         })
-        .then(response => response.json())
-        .then(data => {
-            messageBox.textContent = data.message;
-            messageBox.style.color = data.status === 'error' ? 'red' : 'green';
+        .then(response => {
+            if (response.ok) {
+                return response.blob();
+            } else {
+                throw new Error('Network response was not ok.');
+            }
+        })
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = 'all_paths.zip';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            messageBox.textContent = "Шляхи завантажені успішно.";
+            messageBox.style.color = 'green';
         })
         .catch(error => {
             console.error('Fetch error:', error);

@@ -1,5 +1,7 @@
 import json
 import os
+import zipfile
+import io
 from flask import Flask, render_template, jsonify, request, send_from_directory
 from word_checker import get_id_by_name
 from local_optimization import local_optimize_graph, read_graph_from_csv, initialize_graph, reconstruct_path
@@ -236,7 +238,15 @@ def save_all_paths_to_file():
 def download_all_paths():
     try:
         save_all_paths_to_file()
-        return jsonify({"status": "success", "message": "Всі шляхи успішно збережені."})
+        output_file = 'for_site/all_paths.txt'
+        zip_file = 'for_site/all_paths.zip'
+
+        # Создаем ZIP архив
+        with zipfile.ZipFile(zip_file, 'w') as zipf:
+            zipf.write(output_file, os.path.basename(output_file))
+
+        app.logger.info(f'Файл збережено як {zip_file}')
+        return send_from_directory(directory='for_site', path=os.path.basename(zip_file), as_attachment=True)
     except Exception as e:
         app.logger.error(f"Failed to save all paths: {e}")
         return jsonify({"status": "error", "message": f"Не вдалося зберегти всі шляхи: {e}"})
