@@ -81,6 +81,8 @@
             <h6>Доступні слова</h6>
             <div class="word-list" id="wordList">
             </div>
+            <div class="section-divider"></div>
+            <button type="button" class="btn btn-secondary" id="downloadPathsBtn">Завантажити шляхи</button>
         </div>
     </div>
 </div>
@@ -93,6 +95,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const clearBtn = document.getElementById('clearBtn');
     const networkContainer = document.getElementById('network');
     const wordList = document.getElementById('wordList');
+    const downloadPathsBtn = document.getElementById('downloadPathsBtn');
 
     const newSecondWordForm = document.getElementById('newSecondWordForm');
     const newSecondWordInput = document.getElementById('newSecondWord');
@@ -199,6 +202,25 @@ document.addEventListener('DOMContentLoaded', function () {
         loadGraph('/optimized_path_intro_data');
         messageBox.textContent = '';
         newWordMessageBox.textContent = '';
+    });
+
+    downloadPathsBtn.addEventListener('click', function () {
+        messageBox.textContent = "Завантаження всіх шляхів, зачекайте...";
+        messageBox.style.color = 'blue';
+
+        fetch('/download_all_paths', {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            messageBox.textContent = data.message;
+            messageBox.style.color = data.status === 'error' ? 'red' : 'green';
+        })
+        .catch(error => {
+            console.error('Fetch error:', error);
+            messageBox.textContent = "Network error: Could not retrieve data.";
+            messageBox.style.color = 'red';
+        });
     });
 
     function determinePath(word1, word2) {

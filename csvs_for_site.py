@@ -4,8 +4,8 @@ import os
 
 # Читання вихідного CSV файлу
 input_file = 'csvs/cue1_response2_str_filtered_ROOT.csv'
-output_file = 'csvs_for_site/ukrainian_assoc_data.csv'
-zip_file = 'csvs_for_site/ukrainian_assoc_data.zip'
+output_file = 'for_site/ukrainian_assoc_data.csv'
+zip_file = 'for_site/ukrainian_assoc_data.zip'
 
 # Завантаження даних
 df = pd.read_csv(input_file)

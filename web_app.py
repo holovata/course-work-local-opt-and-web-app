@@ -11,6 +11,7 @@ from opt_path_to_json import opt_path_to_json
 app = Flask(__name__)
 
 global optimized_graph, all_paths, first_word_id
+full_nodes_count = 3892
 
 # Load the JSON file safely and initialize graphs on startup
 try:
@@ -209,12 +210,36 @@ def visualization():
 
 @app.route('/download_assoc_data')
 def download_assoc_data():
-    zip_path = 'csvs_for_site/ukrainian_assoc_data.zip'
+    zip_path = 'for_site/ukrainian_assoc_data.zip'
     try:
-        return send_from_directory(directory='csvs_for_site', path=os.path.basename(zip_path), as_attachment=True)
+        return send_from_directory(directory='for_site', path=os.path.basename(zip_path), as_attachment=True)
     except Exception as e:
         app.logger.error(f"Failed to send file: {e}")
         return jsonify({"error": "Failed to send file"}), 500
+
+
+def save_all_paths_to_file():
+    global all_paths, full_nodes_count
+    try:
+        with open('for_site/all_paths.txt', 'w', encoding='utf-8') as file:
+            for i in range(full_nodes_count):
+                path = reconstruct_path(full_graph, all_paths, first_word_id, i)
+                if path:
+                    path_display = " -> ".join(str(node) for node in path)
+                    file.write(f"Path from {first_word_id} to {i}: {path_display}\n")
+        app.logger.info("All paths have been successfully saved to 'for_site/all_paths.txt'.")
+    except Exception as e:
+        app.logger.error(f"Failed to save all paths to file: {e}")
+
+
+@app.route('/download_all_paths', methods=['POST'])
+def download_all_paths():
+    try:
+        save_all_paths_to_file()
+        return jsonify({"status": "success", "message": "Всі шляхи успішно збережені."})
+    except Exception as e:
+        app.logger.error(f"Failed to save all paths: {e}")
+        return jsonify({"status": "error", "message": f"Не вдалося зберегти всі шляхи: {e}"})
 
 
 if __name__ == "__main__":
