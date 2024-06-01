@@ -17,8 +17,8 @@
                 "size": 17.5,
                 "color": "#fbff03",
                 "name": "життя",
-                "is_in_path": true,
-                "value": null
+                "is_in_path": false,
+                "value": "241.1"
             }
         },
         {
@@ -56,8 +56,8 @@
                 "size": 17.5,
                 "color": "#fbff03",
                 "name": "радість",
-                "is_in_path": true,
-                "value": null
+                "is_in_path": false,
+                "value": "203.0"
             }
         },
         {
@@ -69,8 +69,8 @@
                 "size": 17.5,
                 "color": "#fbff03",
                 "name": "щастя",
-                "is_in_path": true,
-                "value": null
+                "is_in_path": false,
+                "value": "210.8"
             }
         },
         {
@@ -212,8 +212,8 @@
                 "size": 17.5,
                 "color": "#fbff03",
                 "name": "думати",
-                "is_in_path": false,
-                "value": "209.6"
+                "is_in_path": true,
+                "value": null
             }
         },
         {
@@ -303,8 +303,8 @@
                 "size": 17.5,
                 "color": "#fbff03",
                 "name": "погано",
-                "is_in_path": false,
-                "value": "143.6"
+                "is_in_path": true,
+                "value": null
             }
         },
         {
@@ -316,8 +316,8 @@
                 "size": 17.5,
                 "color": "#fbff03",
                 "name": "страх",
-                "is_in_path": false,
-                "value": "40.6"
+                "is_in_path": true,
+                "value": null
             }
         },
         {
@@ -956,7 +956,7 @@
                 "weight": 203.0,
                 "r": 1,
                 "n": 203,
-                "is_in_path": true
+                "is_in_path": false
             }
         },
         {
@@ -969,7 +969,7 @@
                 "weight": 40.6,
                 "r": 5,
                 "n": 203,
-                "is_in_path": false
+                "is_in_path": true
             }
         },
         {
@@ -1086,7 +1086,7 @@
                 "weight": 66.0,
                 "r": 3,
                 "n": 198,
-                "is_in_path": false
+                "is_in_path": true
             }
         },
         {
@@ -1372,7 +1372,7 @@
                 "weight": 30.285714285714285,
                 "r": 7,
                 "n": 212,
-                "is_in_path": true
+                "is_in_path": false
             }
         },
         {
@@ -1944,7 +1944,7 @@
                 "weight": 103.0,
                 "r": 2,
                 "n": 206,
-                "is_in_path": false
+                "is_in_path": true
             }
         },
         {
@@ -2321,7 +2321,7 @@
                 "weight": 7.777777777777778,
                 "r": 27,
                 "n": 210,
-                "is_in_path": true
+                "is_in_path": false
             }
         },
         {
