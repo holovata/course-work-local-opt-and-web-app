@@ -41,11 +41,11 @@ def minimize_value(G, node):
 
 
 # Паралельна оптимізація графа
-def parallel_optimization(G, start_node, max_iterations=100):
+def parallel_optimization(G, start_node):
     changed = True
     iteration = 0
     path = {node: None for node in G.nodes()}
-    while changed and iteration < max_iterations:
+    while changed:
         changed = False
         with ThreadPoolExecutor(max_workers=len(G.nodes())) as executor:
             futures = {executor.submit(minimize_value, G, node): node for node in G.nodes() if node != start_node}
