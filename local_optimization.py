@@ -82,7 +82,6 @@ def reconstruct_path(G, all_paths, start_node, end_node):
     return reversed_path
 
 
-
 # Локальна оптимізація графа
 def local_optimize_graph(G, start_node):
     try:
