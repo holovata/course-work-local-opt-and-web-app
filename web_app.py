@@ -1,10 +1,11 @@
 import json
 import os
+import csv
 import zipfile
-import io
-from flask import Flask, render_template, jsonify, request, send_from_directory
-from word_checker import get_id_by_name
-from local_optimization import local_optimize_graph, read_graph_from_csv, initialize_graph, reconstruct_path
+from io import BytesIO
+from flask import Flask, render_template, jsonify, request, send_from_directory, send_file
+from word_checker import get_id_by_name, get_name_by_id
+from local_optimization import local_optimize_graph, read_graph_from_csv, initialize_graph, reconstruct_path, load_into_csv
 from json_subgraph_add_values import update_values_and_labels, update_is_in_path
 from create_subgraph import create_subgraph_based_on_degree
 import pandas as pd
@@ -133,6 +134,7 @@ def optimize_graph():
         optimized_graph, all_paths = local_optimize_graph(full_graph, word1_id)
         path = reconstruct_path(full_graph, all_paths, word1_id, word2_id)
         first_word_id = word1_id
+        load_into_csv(optimized_graph, 'for_site/mapping.csv')
 
         if path is None or not path:
             return jsonify({"status": "warning", "message": "Немає шляху між введеними словами."})
@@ -194,6 +196,7 @@ def optimized_path_data():
         if 'edges' not in data:
             data['edges'] = []
         app.logger.info(f"Optimized path data loaded successfully: {data}")
+
         return jsonify(data)
     except Exception as e:
         app.logger.error(f"Failed to load 'optimized_path.json': {e}")
@@ -220,36 +223,34 @@ def download_assoc_data():
         return jsonify({"error": "Failed to send file"}), 500
 
 
-def save_all_paths_to_file():
-    global all_paths, full_nodes_count
+@app.route('/download_mapping_zip', methods=['POST'])
+def download_mapping_zip():
     try:
-        with open('for_site/all_paths.txt', 'w', encoding='utf-8') as file:
-            for i in range(full_nodes_count):
-                path = reconstruct_path(full_graph, all_paths, first_word_id, i)
-                if path:
-                    path_display = " -> ".join(str(node) for node in path)
-                    file.write(f"Path from {first_word_id} to {i}: {path_display}\n")
-        app.logger.info("All paths have been successfully saved to 'for_site/all_paths.txt'.")
+        # Path to the CSV file
+        csv_file_path = 'for_site/mapping.csv'
+
+        # Ensure the CSV file exists
+        if not os.path.isfile(csv_file_path):
+            return jsonify({"status": "error", "message": "CSV file not found."}), 404
+
+        # Create a ZIP file from the CSV file
+        zip_file_path = 'for_site/mapping.zip'
+        with zipfile.ZipFile(zip_file_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            zipf.write(csv_file_path, os.path.basename(csv_file_path))
+
+        # Send the ZIP file as a download
+        return send_file(zip_file_path, as_attachment=True, download_name=os.path.basename(zip_file_path),
+                         mimetype='application/zip')
+
     except Exception as e:
-        app.logger.error(f"Failed to save all paths to file: {e}")
+        error_message = str(e)
+        app.logger.error("Error creating and downloading zip file: " + error_message)
+        return jsonify({"status": "error", "message": "Error creating and downloading zip file: " + error_message})
 
 
-@app.route('/download_all_paths', methods=['POST'])
-def download_all_paths():
-    try:
-        save_all_paths_to_file()
-        output_file = 'for_site/all_paths.txt'
-        zip_file = 'for_site/all_paths.zip'
-
-        # Создаем ZIP архив
-        with zipfile.ZipFile(zip_file, 'w') as zipf:
-            zipf.write(output_file, os.path.basename(output_file))
-
-        app.logger.info(f'Файл збережено як {zip_file}')
-        return send_from_directory(directory='for_site', path=os.path.basename(zip_file), as_attachment=True)
-    except Exception as e:
-        app.logger.error(f"Failed to save all paths: {e}")
-        return jsonify({"status": "error", "message": f"Не вдалося зберегти всі шляхи: {e}"})
+@app.route('/tutorial')
+def tutorial():
+    return render_template('tutorial.html')
 
 
 if __name__ == "__main__":

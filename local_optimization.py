@@ -64,25 +64,25 @@ def parallel_optimization(G, start_node, max_iterations=100):
     return G, path
 
 
-# Реконструкція шляху
 def reconstruct_path(G, all_paths, start_node, end_node):
     if end_node not in all_paths or all_paths[end_node] is None:
-        # Return only the start node if no path to the end node exists
-        node_value = G.nodes[start_node]['value']
+        # Возвращаем только стартовый узел, если путь до конечного узла не существует
+        node_value = round(G.nodes[start_node]['value'], 2)
         return [f"{start_node} (Value: {node_value})"]
 
     reversed_path = []
     current = end_node
     while current != start_node:
-        node_value = G.nodes[current]['value']
+        node_value = round(G.nodes[current]['value'], 2)
         reversed_path.append(f"{current} (Value: {node_value})")
         current = all_paths[current]
         if current is None:
             break
-    node_value = G.nodes[start_node]['value']
+    node_value = round(G.nodes[start_node]['value'], 2)
     reversed_path.append(f"{start_node} (Value: {node_value})")
     reversed_path.reverse()
     return reversed_path
+
 
 
 # Локальна оптимізація графа
@@ -111,7 +111,38 @@ def local_optimize_graph(G, start_node):
         return None, None
 
 
-if __name__ == "__main__":
+import csv
+import pandas as pd
+
+
+def load_into_csv(G, output_file):
+    try:
+        nodes_file = 'csvs/nodes12_list.csv'  # Path to the file containing node names
+        with open(nodes_file, 'r', encoding='utf-8') as nf:
+            node_df = pd.read_csv(nf)
+
+        node_id_to_name = {row['Id']: row['Name'] for index, row in node_df.iterrows()}
+
+        graph_data = []
+        for node in G.nodes(data=True):
+            word = node_id_to_name.get(node[0], str(node[0]))  # Use the ID if the name is not found
+            value = round(node[1].get('value', 0), 3)
+            graph_data.append((word, value))
+
+        # Sort the data by word
+        graph_data.sort(key=lambda x: x[0])
+
+        with open(output_file, 'w', newline='', encoding='utf-8') as csvfile:
+            csvwriter = csv.writer(csvfile)
+            csvwriter.writerow(['Word', 'Value'])
+            csvwriter.writerows(graph_data)
+
+        print(f"Graph data successfully written to {output_file}")
+    except Exception as e:
+        print(f"Failed to write graph data to CSV: {e}")
+
+
+'''if __name__ == "__main__":
     csv_file_path = 'csvs/cue1_response2_str_filtered_ROOT.csv'
     df = read_graph_from_csv(csv_file_path)
     G = initialize_graph(df)
@@ -126,4 +157,4 @@ if __name__ == "__main__":
         print("Оптимізований шлях:", path)
     else:
         print("Шлях не знайдено.")
-
+    load_into_csv(optimized_graph, 'for_site/mapping.csv')'''

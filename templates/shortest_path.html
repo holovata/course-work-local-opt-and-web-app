@@ -82,7 +82,7 @@
             <div class="word-list" id="wordList">
             </div>
             <div class="section-divider"></div>
-            <button type="button" class="btn btn-secondary" id="downloadPathsBtn">Завантажити шляхи</button>
+            <button type="button" class="btn btn-secondary" id="downloadPathsBtn">Завантажити розмітку</button>
         </div>
     </div>
 </div>
@@ -208,7 +208,7 @@ document.addEventListener('DOMContentLoaded', function () {
         messageBox.textContent = "Завантаження всіх шляхів, зачекайте...";
         messageBox.style.color = 'blue';
 
-        fetch('/download_all_paths', {
+        fetch('/download_mapping_zip', {
             method: 'POST'
         })
         .then(response => {
@@ -223,11 +223,11 @@ document.addEventListener('DOMContentLoaded', function () {
             const a = document.createElement('a');
             a.style.display = 'none';
             a.href = url;
-            a.download = 'all_paths.zip';
+            a.download = 'mapping.zip';
             document.body.appendChild(a);
             a.click();
             window.URL.revokeObjectURL(url);
-            messageBox.textContent = "Шляхи завантажені успішно.";
+            messageBox.textContent = "Файл завантажений успішно.";
             messageBox.style.color = 'green';
         })
         .catch(error => {
@@ -316,4 +316,5 @@ document.addEventListener('DOMContentLoaded', function () {
     loadWordList();  // Load the list of words
 });
 </script>
+
 {% endblock %}
