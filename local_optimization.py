@@ -43,7 +43,6 @@ def minimize_value(G, node):
 # Паралельна оптимізація графа
 def parallel_optimization(G, start_node):
     changed = True
-    iteration = 0
     path = {node: None for node in G.nodes()}
     while changed:
         changed = False
@@ -60,7 +59,6 @@ def parallel_optimization(G, start_node):
             if updated:
                 G.nodes[node]['value'] = new_value
                 path[node] = best_predecessor
-        iteration += 1
     return G, path
 
 
